@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodatabase
+spec:
+  selector:
+    app: mongodatabase
+  ports:
+    - port: 27017
+      targetPort: 27017
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodatabase
+spec:
+  selector:
+    matchLabels:
+      app: mongodatabase
+  template:
+    metadata:
+      labels:
+        app: mongodatabase
+    spec:
+      containers:
+        - name: mongodatabase
+          image: mongo:3.6.17-xenial
+          ports:
+            - containerPort: 27017
+          volumeMounts:
+            - name: storage
+              mountPath: /data/db
+      volumes:
+        - name: storage
+          persistentVolumeClaim:
+            claimName: mongo-claim
